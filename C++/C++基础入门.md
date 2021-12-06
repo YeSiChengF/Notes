@@ -16,7 +16,7 @@ using namespace std;
 
 int main(){
 	int a=10;
-    cout<<"a="<<a<<endl;
+    cout<<"a="<<a<<endl;//endl代表这行结束
     system("pause");
     return 0;
 }
@@ -66,6 +66,8 @@ int main(){
     cout<<"acc="<<acc<<endl;//报错，宏常量不可修改
 }
 ```
+
+## 2.数据类型
 
 ### 整型
 
@@ -126,4 +128,91 @@ char ch='a';
 //输出对应的ASCII码
 cout<<(int)ch<<endl;
 ```
+
+### 字符串型
+
+需要使用头文件
+
+```c++
+#include <string> //头文件(类似类库)
+```
+
+### 布尔型
+
+非0的数值都可以代表true,0代表false
+
+```c++
+bool flag=true;
+cout<<flag<<endl;//1
+bool flag=false;
+cout<<flag<<endl;//0
+```
+
+### 数据的输入
+
+关键字 cin
+
+```c++
+bool isHave;
+cin>>isHave;
+```
+
+## 3.算数运算符
+
+### 除法/	 
+
+除数和取模数不能为0，否则为非法操作
+
+### 取模%
+
+两个小数不可以做取模运算
+
+只有整型变量可以进行取模运算
+
+## 4.程序流程结构
+
+### break
+
+退出当前循环
+
+### continue
+
+跳过本次循环
+
+### goto
+
+无条件跳转代码,跳转至标记点
+
+`语法：goto 标记;`
+
+```c++
+int main(){
+	goto FLAG;
+    cout<<"!"<<endl;
+    
+    FLAG:
+    cout<<"@"<<endl;
+    
+    return 0;
+}
+```
+
+## 5.数组
+
+### 一维数组
+
+`int arr1[] = { 1,3,4,5 };`
+
+**必须进行初始化操作**
+
+名称用途：
+
+1. 统计整个数组在内存中的长度 	`sizeof(arr)`
+2. 获取数组在内存中的首地址(16进制) `cout<<arr<<endl`
+
+查看数组元素地址 `cout<<&arr[0]<<endl`
+
+数组名是常量已经指定了内存地址，不可以进行赋值操作
+
+不能将一个数组赋值给另一个数组
 
