@@ -85,6 +85,25 @@ short num1=10;
 cout<<num1<<endl;
 ```
 
+### 类型的最大最小值
+
+```c++
+namespace std;
+int main(){
+	cout << "\t最大值：" << (numeric_limits<long>::max)();  
+	cout << "\t最小正数：" << (numeric_limits<long>::min)() << endl; 	cout << "\t最小值(为负数或0)"<<std::numeric_limits<T>::lowest()<<endl;
+}
+```
+
+### typedef声明
+
+可以对一个已有类型取别名
+
+```c++
+typedef int feet;
+feet num=10;
+```
+
 ### 实型(浮点型)
 
 float 4字节 7位有效数字	double 8字节 15~16位有效数字
