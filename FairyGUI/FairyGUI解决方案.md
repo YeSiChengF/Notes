@@ -33,7 +33,7 @@ treeNode.AddChild(treeNode2);
 private void RenderTreeNode(GTreeNode node, GComponent obj)
 {
 	GComponent objQ = node.cell;
-    //判断当前节点的层级，如果为1为文件夹节点，不为1为子节点
+	//判断当前节点的层级，如果为1为文件夹节点，不为1为子节点
 	if (node.level != 1)
 	{
 		ServerCity serverCity = node.data as ServerCity;
