@@ -4,6 +4,8 @@
 
 计算机组成原理
 
+https://www.bilibili.com/video/BV1EW411u7th?from=search&seid=11558880190937398744&spm_id_from=333.337.0.0
+
 深入理解计算机系统
 
 计算机体系结构量化分析
