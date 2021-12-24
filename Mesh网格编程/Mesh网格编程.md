@@ -80,3 +80,38 @@ private IEnumerator Generate () {
 
 
 ### 2.创建网格
+
+通过 Gizmos  知道顶点是正确的后，需要处理实际网格。一旦处理了顶点，就需要将组件内保存的顶点引用赋值给MeshFilter。
+
+```c#
+private Mesh mesh;
+private IEnumerator Generate () {
+		WaitForSeconds wait = new WaitForSeconds(0.05f);
+		
+		GetComponent<MeshFilter>().mesh = mesh = new Mesh();
+		mesh.name = "Procedural Grid";
+
+		vertices = new Vector3[(xSize + 1) * (ySize + 1)];
+		…
+		mesh.vertices = vertices;
+	}
+```
+
+还需要对网格进行持久化保存，使其在编辑模式下也能保存MeshFilter组件的引用。
+
+//TODO
+
+#### 绘制一个三角形
+
+```c#
+private IEnumerator Generate () {
+		…
+
+		int[] triangles = new int[3];
+		triangles[0] = 0;
+		triangles[1] = 1;
+		triangles[2] = 2;
+		mesh.triangles = triangles;
+}
+```
+
