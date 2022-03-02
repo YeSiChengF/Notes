@@ -131,13 +131,73 @@ private void GenerateCube()
 	//八个角顶点
 	int cornerVertices = 8;
 	//各条边顶点
+    //边上的点为x+1(包含两段),则不包含两端为x-1
+    //(X-1)*4+(Y-1)*4+(Z-1)*4
 	int edgeVertices = (xSize + ySize + zSize - 3) * 4;
 	//内部面顶点
+    //去掉两端的顶点相乘
 	int faceVertices = (
 		(xSize - 1) * (ySize - 1) +
 		(xSize - 1) * (zSize - 1) +
 		(ySize - 1) * (zSize - 1)) * 2;
 	_vertices = new Vector3[cornerVertices + edgeVertices + faceVertices];
+}
+```
+
+生成四个面的点
+
+```c#
+private IEnumerator GenerateVerTex()
+{
+    int index = 0;
+    for (int y = 0; y < ySize + 1; y++)
+    {
+        for (int x = 0; x < xSize + 1; x++, index++)
+        {
+            _vertices[index] = new Vector3(x, y, 0);
+            yield return new WaitForSeconds(0.2f);
+        }
+        //z为0的点已经生成过
+        for (int z = 1; z < zSize + 1; z++, index++)
+        {
+            _vertices[index] = new Vector3(xSize, y, z);
+            yield return new WaitForSeconds(0.2f);
+        }
+        //xSize这个点已经生成过了
+        for (int x = xSize - 1; x >= 0; x--, index++)
+        {
+            _vertices[index] = new Vector3(x, y, zSize);
+            yield return new WaitForSeconds(0.2f);
+        }
+        //不能到0 已经生成过
+        for (int z = zSize - 1; z > 0; z--, index++)
+        {
+            _vertices[index] = new Vector3(0, y, z);
+            yield return new WaitForSeconds(0.2f);
+        }
+    }
+}
+```
+
+上下两侧面内顶点
+```c#
+//底面 内部顶点
+for (int z = 1; z < zSize; z++)
+{
+    for (int x = 1; x < xSize; x++, index++)
+    {
+        _vertices[index] = new Vector3(x, 0, z);
+        yield return new WaitForSeconds(0.1f);
+    }
+}
+//顶面 内部顶点
+for (int z = 1; z < zSize; z++)
+{
+    for (int x = 1; x < xSize; x++, index++)
+    {
+        _vertices[index] = new Vector3(x, ySize, z);
+        yield return new WaitForSeconds(0.1f);
+    }
 }
 ```
 
