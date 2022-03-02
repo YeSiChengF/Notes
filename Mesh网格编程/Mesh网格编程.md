@@ -119,4 +119,25 @@ private IEnumerator Generate () {
 
 概念上一个立方体是由六个2D面组成，这些面通过旋转和定位来构成3D图形。
 
-添加立方体顶点前，需要先知道有多少顶点数量，一个面的顶点数量为`(x+1)*(y+1)`，则一个立方体的顶点数量为`2(((#x+1)*(#y+1))*((#x+1)*(#z+1))*((#z+1)*(#y+1)))`。
+添加立方体顶点前，需要先知道有多少顶点数量，一个面的顶点数量为`(x+1)*(y+1)`，则一个立方体的顶点数量为`2(((#x+1)*(#y+1))*((#x+1)*(#z+1))*((#z+1)*(#y+1)))`。这样计算后八个角的顶点会各会多出三个重复的顶点，每条边上的顶点也都会多增加一个重复顶点。
+
+ ![img](https://catlikecoding.com/unity/tutorials/rounded-cube/02-vertex-overlap.png) 
+
+所以我们需要将八个角、十二条边(每个方向四条)、面内部的顶点进行单独计算。
+
+```c#
+private void GenerateCube()
+{
+	//八个角顶点
+	int cornerVertices = 8;
+	//各条边顶点
+	int edgeVertices = (xSize + ySize + zSize - 3) * 4;
+	//内部面顶点
+	int faceVertices = (
+		(xSize - 1) * (ySize - 1) +
+		(xSize - 1) * (zSize - 1) +
+		(ySize - 1) * (zSize - 1)) * 2;
+	_vertices = new Vector3[cornerVertices + edgeVertices + faceVertices];
+}
+```
+
