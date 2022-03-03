@@ -119,6 +119,8 @@ private IEnumerator Generate () {
 
 概念上一个立方体是由六个2D面组成，这些面通过旋转和定位来构成3D图形。
 
+##### 创建立方体顶点
+
 添加立方体顶点前，需要先知道有多少顶点数量，一个面的顶点数量为`(x+1)*(y+1)`，则一个立方体的顶点数量为`2(((#x+1)*(#y+1))*((#x+1)*(#z+1))*((#z+1)*(#y+1)))`。这样计算后八个角的顶点会各会多出三个重复的顶点，每条边上的顶点也都会多增加一个重复顶点。
 
  ![img](https://catlikecoding.com/unity/tutorials/rounded-cube/02-vertex-overlap.png) 
@@ -201,3 +203,28 @@ for (int z = 1; z < zSize; z++)
 }
 ```
 
+##### 创建立方体三角形序列
+
+ ![img](https://catlikecoding.com/unity/tutorials/rounded-cube/03-quad.png)
+提供创建一个面的方法，其他的五个面可以通过一样的方法创建
+``` c#
+private int SetQuad(int[] triangles, int i, int v00, int v10, int v01, int v11)
+{
+    triangles[i] = v00;
+    triangles[i + 1] = triangles[i + 4] = v01;
+    triangles[i + 2] = triangles[i + 3] = v10;
+    triangles[i + 5] = v11;
+    //提供给后面的面的索引值
+    return i + 6;
+}
+```
+三角形序列数量与顶点数量不同，不需要考虑顶点重复的问题
+ ``` c#
+private void CreateTriangles () {
+	int quads = (xSize * ySize + xSize * zSize + ySize * zSize) * 2;
+	int[] triangles = new int[quads * 6];
+	mesh.triangles = triangles;
+}
+ ```
+
+ 
