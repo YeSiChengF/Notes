@@ -219,6 +219,9 @@ private int SetQuad(int[] triangles, int i, int v00, int v10, int v01, int v11)
 }
 ```
 三角形序列数量与顶点数量不同，不需要考虑顶点重复的问题
+
+首先取一个面中四边形的数量`(x*y)*2`后为一个面中三角形的数量,每个面各有两个面需要`(x*y)*2*2`，最后乘以三角形的顶点数`(x*y)*2*2*3`，最终求出来的是三角形序列的数量不要搞混。
+
  ``` c#
 private void CreateTriangles () {
 	int quads = (xSize * ySize + xSize * zSize + ySize * zSize) * 2;
@@ -227,4 +230,34 @@ private void CreateTriangles () {
 }
  ```
 
- 
+ 获得立方体一圈的顶点数量，首先四边形有四个顶点，一条边内除顶点的其他点数量为`x-1`，z一圈的点则为`4+(x-1+y-1)*2`，化简后为`2x+2z`。
+
+###### 生成长方形的第一个面片
+
+```c#
+//一圈的顶点数量
+int circleVerticeCount = 2 * xSize + 2 * zSize;
+SetQuad(_triangles, 0, 0, 1,0+ circleVerticeCount,1+ circleVerticeCount);
+```
+###### 生成一圈的长方形
+``` c#
+for (int v = 0, t = 0; v < circleVerticeCount; v++, t += 6)
+{
+	SetQuad(_triangles, t, v, v + 1, v + circleVerticeCount, v + 1 + circleVerticeCount, circleVerticeCount);
+}
+```
+但是这样处理后的一圈的最后两个顶点V10、v11会向上一个高度单位,因为我们的顶点不是重复的。我们需要对最后v10和V11进行特殊处理
+``` c#
+private int SetQuad(int[] triangles, int i, int v00, int v10, int v01, int v11, int circleVerticeCount)
+{
+    //取余操作保证最后一个点不会超过范围保证在同一水平线生成
+    v10 = ((v00 / circleVerticeCount) * circleVerticeCount) + (v10 % circleVerticeCount);
+    v11 = ((v01 / circleVerticeCount) * circleVerticeCount) + (v11 % circleVerticeCount);
+    triangles[i] = v00;
+    triangles[i + 1] = triangles[i + 4] = v01;
+    triangles[i + 2] = triangles[i + 3] = v10;
+    triangles[i + 5] = v11;
+    //提供给后面的面的索引值
+    return i + 6;
+}
+```
