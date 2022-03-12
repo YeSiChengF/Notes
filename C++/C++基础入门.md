@@ -1,6 +1,18 @@
-# C++基础入门
+# C++大纲
 
-### 学习路线
+## 注意点
+
+- 值类型也是可以把地址作为函数参数，**使用指针传递地址**，或**使用引用传递地址**
+- 当类没有new时只在栈中存放里内存地址，并没有开辟空间，所以都是在栈中，所以如果在方法内只声明了类当方法结束时会被释放，会触发构造和析构函数。
+- 只要使用了new关键字则都是在堆中开辟内存
+- C++编译器会给每个空对象也分配一个字节空间，为了区分空对象占内存的位置信息。每个对象都有独立的内存空间
+- 在32位操作系统下，我们普遍用的gcc编译器和vs编译器都是默认**按照4个大小进行内存对齐**的也就是说结构体或类中的内存分配默**认是按照4个字节的倍数进行分配**的。当不足4的倍数时会向上补齐
+- 在C#中静态成员必须在静态类中才能定义，而c++在普通类中也可以定义静态成员，`int 类名::静态变量名=值`，静态成员和静态函数为每个对象所拥有
+- 一般把类声明写在头文件中，将类成员函数写在c文件中
+- c++中类里的函数可以在类里声明，在类外进行实现(编写)，格式`类名::函数名(){ 实现的内容 }`。在大项目中进行分开封装便于查看。
+- 如果同一块内存重复释放会导致程序崩溃，两个指针都指向同一个块内存地址的情况下。利用深拷贝解决浅拷贝带来的问题
+
+## 学习路线
 
 计算机组成原理
 
@@ -487,5 +499,526 @@ int * func(){
 	int *p=new int(10);
     return p;
 }
+```
+
+### 引用
+
+作用：给变量起别名(给指针起别名)
+
+语法：`数据类型 &别名 = 原名`
+
+```c++
+int a=10;
+//此时a和b同时使用一个内存地址
+//a和b的指针是相同的
+int &b=a;
+```
+
+#### 注意事项
+
+1.引用必须初始化(必须赋值)
+
+2.初始化后不能更改
+
+#### 方法中的引用传递
+
+值类型可以按引用传递
+
+```c++
+int mySwap(int &a,int &b){
+	//只有值修改，地址不变
+    int temp=a;
+	a=b;
+	b=temp;
+}
+mySwap(a,b);
+```
+##### 1.不要返回局部变量的引用
+```c++
+int& mySwap(){
+    //局部变量
+	int a=10;
+    return a;
+}
+int &ref=mySwap();
+cout<<ref<<endl;//第一次结果正确，编译器做了保留
+cout<<ref<<endl;//结果错误，a的内存释放
+```
+##### 2.函数的调用可以作为左值
+
+如果函数的返回值是引用，这个函数调用可以作为左值
+
+```c++
+int& test(){
+	static int a=10;
+    return a;
+}
+int &ref=test();
+test()=1000;
+//ref=1000
+```
+
+#### 引用的本质
+
+**引用的本质在c++内部实现就是一个指针常量**
+
+#### 常量引用
+
+常量引用主要修饰形参，防止误操作
+
+在函数形参列表中，可以加入`const修饰形参`，防止形参改变实参
+
+```c++
+//等价于 int temp=10;const int& ref=temp;
+//常量引用可以直接复制
+const int & ref=10;
+```
+
+```c++
+void showValue(const int &val){
+    //防止在方法内修改了val
+}
+```
+
+## 10.函数提升
+
+### 占位参数
+
+语法：`返回值类型 函数名 (数据类型){}`
+
+写个数据类型占位
+
+```c++
+void func(int a,int){
+}
+//占位参数可传可不传
+func(10,10);
+func(20);
+```
+### 函数重载注意事项
+
+#### 1.引用作为重载的条件
+
+```c++
+void func(int &a){
+	cout<<a<<endl;
+}
+void func(const int &a){
+	cout<<a<<endl;
+}
+func(a);//调用第一个方法,默认调用引用传递
+func(10);//调用第二个方法，默认值传递
+```
+
+#### 2.函数重载碰到默认值
+
+出现二义性，只能尽量避免
+
+```c++
+void func(int a,int b=10){
+	cout<<a<<endl;
+}
+void func(int a){
+	cout<<a<<endl;
+}
+func(19);//会报错起冲突不知道调用哪个
+```
+
+## 11.类与对象
+
+### 封装
+
+#### 封装的意义
+
+- 将属性和行为作为一个整体，表现生活中的事物
+- 将属性和行为加以权限控制
+
+在设计类的时候，属性和行为写在一起，表现事物
+
+语法：`class 类名{ 访问权限 : 属性 /行为 };`
+
+```c++
+//c++中的类
+class Circle{
+    public:
+    	int m_r;
+    	double calculateZC(){
+            return 2*PI*m_r;
+		}
+};
+```
+
+#### struct和class的区别
+
+##### 默认访问权限不同
+
+struct默认权限为公共
+
+class默认权限为私有
+
+### 继承
+
+### 多态
+
+### 对象初始化和清理
+
+#### 构造函数负责初始化
+
+创建对象时为成员属性赋值
+
+语法：`类名(){}`
+
+#### 析构函数负责做清理
+
+在销毁前系统自动调用，执行一些清理工作
+
+语法：`~类名(){}`
+
+**析构函数不可以有参数**
+
+#### 构造函数的分类及调用
+
+两种分类方式：
+
+- ​	按参数分为：有参构造和无参构造
+
+- ​	按类型分为：普通构造和拷贝构造
+
+**拷贝构造函数**
+
+```c++
+Personal(const Personal &p){
+    age=p.age;
+}
+```
+
+三种调用方式：
+
+- ​	括号法
+
+- ​	显示法
+
+- ​	隐式转换法
+
+```c++
+//括号法
+Personal p();
+//显示法;
+Personal p=Personal();
+//匿名对象 当前行执行结束后，系统会立即回收
+//如果用拷贝构造匿名对象会报错
+Personal();
+//隐式转换法
+Personal p=10;//等价于Personal p=Personal(10);
+```
+
+#### 构造函数调用规则
+
+一个类默认添加三个函数
+
+1.默认构造函数
+
+2.默认析构函数
+
+3.默认拷贝构造函数,对属性进行值拷贝
+
+#### 深拷贝与浅拷贝
+
+浅拷贝：简单的赋值拷贝操作，如果是引用类型则指针地址相同
+
+深拷贝：在堆区重新申请空间，进行拷贝操作，不同内存地址
+
+```c++
+class Personal {
+	int age;
+	int *height;
+public:
+	Personal(int a,int b) {
+		age = a;//浅拷贝
+		height = new int(b);//深拷贝
+	}
+	~Personal() {
+		if (height != NULL) {
+			delete height;//手动释放
+			height = NULL;
+		}
+	}
+};
+```
+#### 初始化列表
+
+格式：`类名():属性名(值1),属性名(值2){}`
+
+```c++
+class Personal{
+	int age;
+    int height;
+    Personal(int a,int h):age(a),height(h){}
+}
+```
+#### 类外构造函数
+
+``` c++
+class Building{
+    Building();
+}
+//一般类内声明构造函数，类外实现。封装在不同文件内
+Building::Building(){
+}
+```
+
+
+#### 静态成员函数
+
+静态函数特征：
+
+- 所有对象共享一个函数
+- 静态函数只能访问静态成员变量
+
+```c++
+//通过对象访问
+Person p;
+p.func();
+//通过类名访问
+Personal::func();
+```
+
+### 对象模型和this指针
+
+#### 成员变量和成员函数分开存储空对象
+
+空对象占用1个字节，C++编译器会给每个空对象也分配一个字节空间，为了区分空对象占内存的位置
+
+当`sizeof(对象);`时，只会显示成员变量的大小或空对象的大小，会进行内存对齐。而静态成员 和成员函数是分开存储的
+
+#### this指针
+
+**this指针指向被调用的成员函数所属的对象**
+
+this指针是指针常量 指针的指向是不可以修改的
+
+那个对象调用this，this就指向谁
+
+this指针隐含在每一个非静态成员函数内
+
+this指针不需要定义，直接使用即可
+
+返回对象本身时，使用`return *this`
+
+```c++
+class Person{
+	int age;
+	Person(int age){
+        this->age=age;
+	}
+}
+```
+
+#### 空指针访问成员函数
+
+空指针访问的成员函数不能带有成员变量
+
+```c++
+class Person {
+public:
+	void ShowClassName() {
+		cout << "this is Person class" << endl;
+	}
+    int age;
+    void ShowClassAge(){
+        //预防空指针报错
+        if(this==NULL)
+        {
+            return;
+        }
+        cout<<age<<endl;
+    }
+};
+int main() {
+	Person *p = NULL;
+	p->ShowClassName();
+}
+```
+
+#### const修饰成员函数
+
+常函数：
+
+- 成员函数后加const后我们成为这个函数为**常函数**
+- 常函数内不可以修改成员属性
+- 成员属性声明时加关键字`mutable`后，在常函数中依然可以修改
+
+```c++
+void func() const{ //等价于 const 类名* const this
+    //方法内不能修改成员属性
+}
+```
+
+##### mutable关键字
+
+```c++
+class Person {
+public:
+	mutable int age;
+	void ShowClassName() const
+	{
+        //在常函数中依旧可以修改
+		age = 123;
+	}
+};
+```
+
+常对象：
+
+- 声明对象前加const称改对象为常对象(不能修改成员属性 除非使用mutable关键字)
+- 常对象只能调用常函数
+
+`const 类名 变量名;`
+
+### 友元
+
+友元的目的是让一个函数或者类访问另一个私有成员
+
+关键字：`friend`
+
+友元的三种实现
+
+- 全局函数做友元
+- 类做友元
+- 成员函数做友元
+
+``` c++
+class Building{
+	//友元函数 可以访问该类的私有成员
+	friend void Func(Building building);
+    //友元类
+    friend class Goods;
+    //友元成员函数
+    friend void Goods::visit();
+private:
+	string m_BedRoom;
+}
+```
+### 运算符重载
+
+#### +运算符重载
+
+方法名：`operator运算符(){}`
+
+##### 1.通过成员函数重载+号
+
+```c++
+class Person{
+public:
+    Person operator+(Person &p){
+		Person temp;
+        temp.m_A=this->m_A+p.m_A;
+        return temp;
+    }
+    int m_A;
+}
+```
+
+##### 2.全局函数重载+号
+
+```c++
+Person operator+(Person &p1,Person &p2){
+		Person temp;
+        temp.m_A=p1.m_A+p2.m_A;
+        return temp;
+}
+```
+
+#### 左移运算符重载
+
+作用：`可以输出自定义数据类型`
+
+ 不会利用成员函数重载<<运算符，无法实现cout在左侧
+
+```c++
+ostream operator<<(ostream &cout,Person &p){
+	cout<<"m_A="<<p.m_A<<"m_B="<<p.m_B;
+    return cout;
+}
+cout<<p<<endl;
+```
+
+#### 递增运算符重载
+
+##### 前置++运算符
+
+```c++
+//成员函数重载
+MyInteger& operator++(){
+	m_Num++;
+    return *this;
+}
+```
+
+##### 后置++运算符
+
+通过占位参数区分前置后置，使用占位参数的是后置++
+
+```c++
+//成员函数重载
+//使用占位参数区分后置++运算符
+MyInteger operator++(int){
+    //先记录当时结果
+	MyInteger temp=*this;
+    m_Num++;
+    //返回旧值，由于c++的后置++不能链式使用，此处只是显示数值作用
+    return temp;
+}
+```
+
+#### =运算符重载
+一般用于处理=需要进行深拷贝时进行的重载
+
+```c++
+//成员函数重载
+MyInteger& operator=(Person &p){
+	//先判断是否有属性在堆区，如果有需要先释放干净，然后再深拷贝
+    if(m_Age!=NULL){
+        delete m_Age;
+        m_Age=NULL;
+	}
+    //深拷贝
+    m_Age= new int(*p.m_Age);
+    return *this;
+}
+```
+
+#### 关系运算符重载
+
+```c++
+bool operator==(Person &p){
+	if(this->m_Name==p._Name&&this->m_Age==p.m_Age){
+        return true;
+    }
+    return false;
+}
+```
+#### 函数调用运算符重载-仿函数
+
+- 函数调用运算符()也可以重载
+- 由于重载后使用的方法非常像函数的调用，因此称为仿函数
+- 仿函数没有固定写法，非常灵活
+
+仿函数就是重写()
+``` C++
+class MyPrint{
+    void operator()(string test){
+        cout<<test<<endl;
+    }
+}
+MyPrint myPrint;
+myPrint("hello world");
+```
+
+仿函数非常灵活没有固定的写法，可以任意扩展
+
+```c++
+//匿名对象函数
+MyPrint()("hello");
 ```
 
