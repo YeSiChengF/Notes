@@ -1,5 +1,15 @@
 # Lua大纲
 
+## 注意点
+
+- 循环用`do`，if语句用`then`，都使用`end`结尾
+- Lua不支持自减和自加操作，只能`i=i+1`，`i=i-1`
+- 字符串的第一个位置是1不是0
+
+## 技巧
+
+- Lua的字符串可以存储`0x00`，可以用字符串存储二进制流
+
 ## 注释
 
  用`--`开头，来写一段`单行注释` 
@@ -105,6 +115,24 @@ tonumber("193")
 ```lua
 a="daeqeq"
 print(#a)
+```
+
+#### string类型类似char数组
+
+Lua中string类型 类似于C里的字符数组，可以包含任意数值
+
+##### 将ascii码转为字符串
+
+```lua
+s=string.char(65)
+s=string.char(0x30,0x31,0x32,0x33)
+```
+
+##### 取出string中的某一位的ascii码
+
+```lua
+n=string.byte(s,2)
+print(n)
 ```
 
 ## function函数
@@ -243,3 +271,76 @@ print(not a)   --true
 print(b>10 and "yes" or "no") --no
 ```
 
+## 分支判断
+
+### if语句
+
+```lua
+if 1>10 then
+	print("1>10")
+elseif 1<10 then
+    print("1<10")
+else
+    print("no")
+end
+```
+
+## 循环
+
+### for循环
+
+```lua
+for i=1,10 do
+	print(i)
+end
+--步长为2
+for i=1,10,2 do
+	print(i)
+end
+```
+
+#### 倒序循环
+
+```lua
+for i=10,1,-1 do
+	print(i)
+end
+```
+
+`i`在过程途中不能赋值，赋值了也没用
+
+假如对`i`赋值会被认定为新建了局部变量
+
+```lua
+for i=10,1,-1 do
+	print(i)
+	local i=1
+end
+```
+
+#### break
+
+通过break退出循环
+
+```lua
+for i=10,1,-1 do
+	print(i)
+	if i == 5 then break end
+end
+```
+
+### while循环
+
+```lua
+n = 10
+while n>1 do
+    print(n)
+    n = n - 1
+end
+```
+
+
+
+### repeat循环
+
+和while循环基本一致
