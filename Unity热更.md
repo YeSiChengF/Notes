@@ -47,7 +47,7 @@ Ios不支持JIT的编译方式
 
 ### Full AOT
 
-由于IOS平台禁止使用JIT，而Mono的AOT模式任会保留一部分代码通过JIT编译。为了解决这个问题，Mono提供了Full AOT模式。。
+由于IOS平台禁止使用JIT(因为IOS封了内存或者堆的可执行权限，变相封锁了JIT的编译方式)，而Mono的AOT模式任会保留一部分代码通过JIT编译。为了解决这个问题，Mono提供了Full AOT模式。。
 
 预先对程序集中的所有CIL代码进行AOT编译生成一个本地代码映像，然后在运行时直接加载这个映像而不再使用JIT引擎。 
 
