@@ -583,4 +583,44 @@ public class SimpleObjectPool<T> : Pool<T>
 
 ![1649780552285](Image/1649780552285.png)
 
-在mFractroy.Create和Recycle(回收)时，更偏向于自定义的操作
+在mFractroy.Create和Recycle(回收)时，更偏向于自定义的操作 
+
+### LevelManager
+
+```c#
+public class LevelManager : MonoBehaviour
+{
+    //可换成配置表
+    private static List<string> mLevelNames;
+    public static int Index { get; set; }
+    public static void Init(List<string> levelNames)
+    {
+        mLevelNames = levelNames;
+        Index = 0;
+    }
+    public static void LoadCurrent()
+    {
+        SceneManager.LoadScene(mLevelNames[Index]);
+    }
+    public static void LoadNext()
+    {
+        Index++;
+        if (Index >= mLevelNames.Count)
+        {
+            Index = 0;
+        }
+        SceneManager.LoadScene(mLevelNames[Index]);
+    }
+}
+```
+
+## 单元测试
+
+Probject内->右键->Create->Testing
+
+创建相对应的c#文件(test模板)
+在Test Runner 界面内可以看到所有的测试脚本和对应的方法
+
+类似于自己编写测试用例进行测试
+
+`Assert.AreEqual`叫做断言，在开发大项目时非常有用的工具。测试通不通过取决于断言通不通过。
