@@ -1,7 +1,5 @@
 ## 反射和特性
 
-
-
 程序本身(类的定义和BCL中的类)这些也是数据。(BCL-Basic Class Lib基础类库)
 
 程序及其类型的数据被称为**元数据**(metadata)，他们保存在程序集中。
@@ -211,7 +209,9 @@ object[] attributeArray=t.GetCustomAttributes(false);
 
 ## 线程、任务和同步
 
-### 异步委托（后续不支持这种写法）
+### 多线程
+
+#### 异步委托（后续不支持这种写法）
 
 委托是创建线程的一种简单方法，可以异步调用它。
 
@@ -232,3 +232,356 @@ public void Main()
 
 ```
 
+#### 创建线程
+
+`Thread thread = new Thread(Test);`创建线程必须传递参数，可以通过传递方法进行构建。
+
+线程的调用通过`thread.Start()`函数
+
+#### 线程的调用
+
+##### 传递方法
+
+```c#
+static void Test()
+{
+    Console.WriteLine("Started");
+    Thread.Sleep(1000);
+    Console.WriteLine("Completed");
+}
+static void Main(string[] args)
+{
+    Thread thread = new Thread(Test);
+    thread.Start();
+    Console.WriteLine("Main completed");
+}
+```
+
+线程的构建可以传递无参和有一个参的构造函数
+
+`ParameterizedThreadStart`有参和`ThreadStart`无参
+
+通过`Start(obj)`方法传递参数
+
+```c#
+static void Download(Object o)
+{
+    Console.WriteLine("Started");
+    Thread.Sleep(1000);
+    Console.WriteLine("Completed");
+}
+static void Main(string[] args)
+{
+    Thread thread = new Thread(Download);
+    thread.Start("abb");
+    Console.WriteLine("Main completed");
+}
+```
+
+##### 自定义类传递数据
+
+通过自定义类，在类里创建方法。创建线程时使用对象内的方法构建。
+
+###### 自定义类
+
+```c#
+internal class DownloadTool
+{
+    public string URL
+    {
+        get;
+        private set;
+    }
+    public string Message
+    {
+        get;
+        private set;
+    }
+    public DownloadTool(string url, string message)
+    {
+        URL = url;
+        Message = message;
+    }
+    public void Download()
+    {
+        Console.WriteLine("从" + URL + "中下载" + Message);
+    }
+}
+```
+
+```c#
+static void Main(string[] args)
+{
+    DownloadTool downloadTool = new DownloadTool("http:xxxx/xxxx/xx.com", "ssdd");
+    Thread thread = new Thread(downloadTool.Download);
+    thread.Start();
+}
+```
+
+#### 后台线程和前台线程
+
+**后台线程是服务于前台线程的。前台线程关闭后，后台线程也没有存在的必要。(会自动关闭)**
+
+ 只有一个前台线程在运行，应用程序的进程就在运行，如果多个前台线程在运行，但是Main 方法结束了，应用程序的进程仍然是运行的，直到所有的前台线程完成其任务为止。 
+
+ 在默认情况下，用Thread类创建的线程是前台线程。线程池中的线程总是后台线程。 
+
+**在用Thread类创建线程的时候，可以设置IsBackground属性，表示它是一个前台线程还是一 个后台线程。**
+
+```c#
+static void Main(string[] args)
+{
+    DownloadTool downloadTool = new DownloadTool("http:xxxx/xxxx/xx.com", "ssdd");
+    //设置为前台线程(默认)
+    Thread thread = new Thread(downloadTool.Download){ IsBackground = false};
+    thread.Start();
+}
+```
+
+ 
+
+```c#
+static void Main(string[] args)
+{
+    Console.WriteLine("dadada");
+    //前台线程结束后，后台线程都会自动关闭不执行
+    DownloadTool downloadTool = new DownloadTool("http:xxxx/xxxx/xx.com", "ssdd");
+    //设置为后台线程
+    Thread thread = new Thread(downloadTool.Download){ IsBackground = true};
+    thread.Start();
+}
+```
+
+#### 线程优先级
+
+每个线程分配到的`时间片段`可能不太相同，可以通过优先级控制。优先级比较高的，会更优先调度。
+
+线程有操作系统调度，**一个CPU同一时间只能做一件事情（运行一个线程中的计算任务）**，当有很多线程需要CPU去执行的时候，线程调度器会根据线程的优先级去判断先去执行哪一个线程，**如果优先级相同的话，就使用一个循环调度规则，逐个执行每个线程。**
+
+##### 设置优先级
+
+在Thead类中，可以设置`Priority`属性，以影响线程的基本优先级,`Priority`属性是一个`ThreadPriority`枚举定义的一个值。定义的级别有`Highest`,`AboveNormal`,`Normal`,`BelowNormal` 和 `Lowest`。
+
+#### 控制线程
+
+##### 线程的状态
+
+当我们获取线程状态时，线程拥有两个状态`Running`和`Unstarted`
+
+当我们通过调用`Thread`对象的`Start`方法，可以创建线程，但是调用了`Start`方法之后，新线程不是马上进入`Running`状态，而是出于`Unstarted`状态。
+
+只有当操作系统的线程调度器选择了要运行的线程，这个线程的状态才会修改为`Running`状态。我们使用`Thread.Sleep()`方法可以让当前线程休眠进入`WaitSleepJoin`状态。
+
+##### Join方法
+
+如果需要等待线程的结束，可以调用`Thread`对象的 `Join`方法。
+把`Thread`加入进来并停止当前的线程，并将当前线程设置为`WaitSleepJoin`状态，直到Join进来的线程完成为止。才会继续执行当前线程。
+
+#### 线程池
+
+**创建线程需要时间。线程池减少了创建线程的时间。**
+
+**线程池启动的线程默认都是后台线程,不能给入池的线程设置优先级或名称**
+
+**入池的线程只能用与时间较短的任务，如果线程要一直运行就要用Thread类创建一个线程。**
+
+`ThreadPool`类管理线程。这个类会在需要时增减池中线程的线程数,直到达到最大的线程数。 池中的最大线程数是可配置的。 
+
+在双核 CPU中,默认设置为1023个工作线程和 1000个 I/O线程。
+
+也可以指定在创建线程池时应立即启动的最小线程数,以及线程池中可用的最大线程数。 
+如果有更多的作业要处理,线程池中线程的个数也到了极限,最新的作业就要排队,且必须等待线程完成其任务。
+
+使用`ThreadPool.QueueUserWorkItem(WaitCallback)`调用线程池内线程。`WaitCallback`带有一个参数的方法。
+
+```c#
+static void Main()
+{
+    int nWorkerThreads;
+    int nCompletionPortThreads;
+    ThreadPool.GetMaxThreads(out nWorkerThreads, out nCompletionPortThreads);
+    Console.WriteLine("Max worker threads : " + nWorkerThreads + " I/O completion threads
+:"+nCompletionPortThreads );
+for (int i = 0; i < 5; i++)
+{
+    //使用线程池内线程
+    ThreadPool.QueueUserWorkItem(JobForAThread);
+}
+Thread.Sleep(3000);
+}
+static void JobForAThread(object state)
+{
+    for (int i = 0; i < 3; i++)
+    {
+        Console.WriteLine("Loop " + i + " ,running in pooled thread
+        "+Thread.CurrentThread.ManagedThreadId);
+        Thread.Sleep(50);
+    }
+}
+```
+
+### 任务
+
+ 在.NET4 新的命名空间`System.Threading.Tasks`包含了类抽象出了线程功能，**在后台使用的 `ThreadPool`进行管理的(后台线程)**。 
+
+ 任务表示应完成某个单元的工作。这个工作可以在单独的线程中运 行，也可以以同步方式启动一个任务。 
+
+ 任务也是异步编程中的一种实现方式。 、
+
+#### 启动任务
+
+```c#
+//启动任务的两种方式
+TaskFactory tf = new TaskFactory();
+Task t1 = tf.StartNew(TaskMethod);
+Task t3 = new Task(TaskMethod);
+t3.Start();
+```
+
+#### 连续任务
+
+ 如果一个任务t1的执行是依赖于另一个任务t2的，那么就需要在这个任务t2执行完毕后才开 始执行t1。这个时候我们可以使用连续任务。  
+
+```c#
+static void DoFirst(){
+	Console.WriteLine("do in task : "+Task.CurrentId);
+	Thread.Sleep(3000);
+}
+static void DoSecond(Task t){
+	Console.WriteLine("task "+t.Id+" finished.");
+	Console.WriteLine("this task id is "+Task.CurrentId);
+	Thread.Sleep(3000);
+}
+Task t1 = new Task(DoFirst);
+//t1执行完后执行t2
+Task t2 = t1.ContinueWith(DoSecond);
+Task t3 = t1.ContinueWith(DoSecond);
+//t2执行完后执行t4
+Task t4 = t2.ContinueWith(DoSecond);
+Task t5 = t1.ContinueWith(DoError,TaskContinuationOptions.OnlyOnFaulted);
+```
+
+#### 任务层级结构
+
+在一个任务中嵌套一个任务，相当于新任务是当前任务的子任务。两个任务异步执行，如果父任务执行完但子任务还没执行完，父任务的状态会设置为` WaitingForChildrenToComplete `，只有当子任务也执行完了，父任务的状态才会变成` RunToCompletion `
+
+### 资源访问冲突问题
+
+多线程访问同一个资源时,会产生逻辑冲突或程序奔溃。
+
+多个线程读写同一个资源时，没有增加保护机制导致的数据不安全、不可靠。
+
+```c#
+public class StateObject{
+	private int state = 5;
+	public void ChangeState(int loop){
+		if(state==5){
+			state++;//6
+			Console.WriteLine("State==5:"+state==5+" Loop:"+loop);//false
+		}
+		state = 5;
+	}
+}
+static void Main(){
+	var state = new StateObject();
+	for(int i=0;i<20;i++){
+        //导致当前线程访问到的资源可能已经被后面线程修改的情况。使资源数据已经成为了脏数据。
+		new Task(RaceCondition,state).Start();
+	}
+    //只是保证后台线程能够执行完后再结束主线程
+	Thread.Sleep(10000);
+}
+
+```
+
+#### 使用锁
+
+**锁可以是任意类型的对象，一般为`Object`类型对象**
+
+**只有一个线程会拿到锁，拿不到锁的线程会在这里等待。**如果等待锁的线程数量很多，则会发生“抢锁”的情况，谁先抢到锁谁就先执行。
+
+**使用锁的优缺点，优点使数据安全，缺点拖慢线程的执行速度。**
+
+```c#
+private Object _lock=new Object();
+private int state=5;
+private void ChangeState()
+{
+    lock(_lock){
+        if(state==5)
+        {
+            state++;
+            Console.WriteLine("State:"+state);
+		}
+        state=5;
+    }
+}
+```
+
+#### 死锁问题
+
+ **线程在等待一个永远取不到的锁，被称为死锁。**死锁问题导致等待这个锁的线程全部进入无限制的等待。
+
+当一个锁管理两个资源时，如果两个资源是被线程独立调用（没有线程同时用两个资源的情况）就会造成性能浪费，因为只要用到这个两个资源的线程都会面临等待锁的情况。
+
+```c#
+public class SampleThread
+{
+    private StateObject s1;
+    private StateObject s2;
+    public SampleThread(StateObject s1, StateObject s2)
+    {
+        this.s1 = s1;
+        this.s2 = s2;
+    }
+    public void Deadlock1()
+    {
+        int i = 0;
+        while (true)
+        {
+            //先取s1锁再取s2锁
+            lock (s1)
+            {
+                lock (s2)
+                {
+                    s1.ChangeState(i);
+                    s2.ChangeState(i);
+                    i++;
+                    Console.WriteLine("Running i : " + i);
+                }
+            }
+        }
+    }
+    public void Deadlock2()
+    {
+        int i = 0;
+        while (true)
+        {
+            //先取s2锁再取s1锁
+            lock (s2)
+            {
+                lock (s1)
+                {
+                    s1.ChangeState(i);
+                    s2.ChangeState(i);
+                    i++;
+                    Console.WriteLine("Running i : " + i);
+                }
+            }
+        }
+    }
+}
+var state1 = new StateObject();
+var state2 = new StateObject();
+//当线程需要的锁被其他线程取走了，就造成了死锁问题。
+//这个线程取了s1锁，拿不到s2锁
+new Task(new SampleTask(s1, s2).DeadLock1).Start();
+//这个线程取了s2锁，拿不到s1锁
+new Task(new SampleTask(s1, s2).DeadLock2).Start();
+```
+
+##### 解决死锁
+
+ 在编程的开始设计阶段，设计锁定顺序 
+
+必须先拿到A锁，然后才能拿B锁。不能产生不同顺序的情况。
