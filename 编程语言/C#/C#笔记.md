@@ -209,3 +209,26 @@ t.isDefined(typeof(InfomationAttribute),false)
 object[] attributeArray=t.GetCustomAttributes(false);
 ```
 
+## 线程、任务和同步
+
+### 异步委托（后续不支持这种写法）
+
+委托是创建线程的一种简单方法，可以异步调用它。
+
+委托是方法的类型安全的引用。
+
+当`Delegate类`异步调用时，Delegate类会创建一个执行任务的线程。
+
+```c#
+public delegate void TasksTestDelegate();
+public void	TaskTest(){
+    
+}
+public void Main()
+{
+    TasksTestDelegate t1=TaskTest;
+    t1.BeginInvoke(null,null);
+}
+
+```
+
