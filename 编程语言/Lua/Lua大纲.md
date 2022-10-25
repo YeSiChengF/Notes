@@ -115,11 +115,12 @@ tonumber("193")
 ```lua
 a="daeqeq"
 print(#a)
+--等价于s:len()
 ```
 
 #### string类型类似char数组
 
-Lua中string类型 类似于C里的字符数组，可以包含任意数值
+Lua中string类型 类似于C里的字符数组，可以包含任意数值包括0x00，可以存储二进制流因为都是原原本本存储
 
 ##### 将ascii码转为字符串
 
@@ -133,7 +134,20 @@ s=string.char(0x30,0x31,0x32,0x33)
 ```lua
 n=string.byte(s,2)
 print(n)
+--语法糖，第一个到最后一个
+s:byte(1，-1)
 ```
+
+### format
+
+调用c的接口
+
+```lua
+local f=string.format("%d,%d",1,2)
+print(f)
+```
+
+
 
 ## function函数
 
@@ -260,7 +274,9 @@ print(a or b)
 print(not a)
 ```
 
-**`and``or``not`返回的并不完全是true和false，会直接返回a或者b的值**
+**`and``or`返回的并不完全是true和false，会直接返回a或者b的值，可以通过短路求值**
+
+只有`not`返回true和false
 
 ```lua
 a=nil --真
@@ -344,3 +360,196 @@ end
 ### repeat循环
 
 和while循环基本一致
+
+
+
+## 多文件调用
+
+### require
+
+运行指定多文件
+
+末尾不带扩展名
+
+```lua
+--.\?lua   把文件名匹配到？内
+require("文件名")
+```
+
+不同层架文件夹用`.`分隔
+
+```lua
+require("文件夹名.文件名")
+```
+
+只会运行一次
+
+```lua
+--lua文件有可以return返回值
+local r = require('hello')
+--后面调用的都是前面返回的内容
+require('hello')
+require('hello')
+require('hello')
+require('hello')
+print(r)
+```
+
+### package.path
+
+```lua
+package.path=package.path..";./path/?.lua"
+require('hello2')
+```
+
+### 多次调用
+
+调用lua文件内的函数
+
+```lua 
+--hello.lua
+local hello={}
+function hello.say()
+    print("hello world")
+end
+//通过返回table
+return hello
+
+--test.lua
+local test=require('hello')
+//通过table内的方法调用
+test.say()
+```
+
+## 迭代table
+
+```lua
+t={"a","b","c","d"}
+for i=1,#t,do
+    print(i,t[i])
+end
+```
+
+### 迭代器ipairs
+
+纯数字连续下标可以用
+
+```lua
+t={"a","b","c","d"}
+--下标给i，值给j
+for i,j in ipairs(t) do
+    print(i,j)
+end
+```
+
+```lua
+t={
+	[1]="a",
+	[2]="b",
+	[3]="c",
+	[5]="d"
+}
+--下标给i，值给j
+for i,j in ipairs(t) do
+	--只能遍历到1到3，不连续的后面遍历不到
+    print(i,j)
+end
+```
+
+### 迭代器pairs
+
+可以遍历所有下标
+
+pairs内部调用的是`next`函数
+
+```lua
+t={
+	[1]="a",
+	[2]="b",
+	[3]="c",
+	[5]="d"
+}
+--下标给i，值给j
+for i,j in pairs(t) do
+	--只能遍历到1到3，不连续的后面遍历不到
+    print(i,j)
+end
+```
+
+```lua
+t={
+	apple="a",
+	banana="b",
+	eraser="c",
+	water="d"
+}
+--下标给i，值给j
+for i,j in pairs(t) do
+	--只能遍历到1到3，不连续的后面遍历不到
+    print(i,j)
+end
+```
+
+## 元表、元方法
+
+
+
+## 语法糖
+
+```lua
+t={
+	a=0,
+	add=function(tab,num)
+		tab.a=tab.a+num
+	end
+}
+--类似于面向对象的方法调用
+t:add(10)--等价于t.add(t,10)
+```
+
+### 面向对象
+
+```lua
+--对象名
+bag={}
+
+bagmt={
+    --装入东西的函数
+    put=function(t,item)
+        	table.insert(t.items,item)
+        end,
+    take=function(t)
+        	return table.remove(t)
+    	 end,
+    list=function(t)
+        	return table.concat(t.items,",")
+         end
+}
+bagmt["__index"]=bagmt
+--构造函数
+function bag.new()
+    local t={
+        items={}
+    }
+    setmetatable(t,bagmt)
+    return t
+end
+```
+
+## 协程coroutine
+
+一个lua虚拟机里只能有一个线程
+
+### coroutine.create 可创建一个协程
+
+返回值为 `thread `类型
+
+```lua
+local co=coroutine.create(
+    function()
+        print("hello world!")
+    end
+    )
+
+```
+
