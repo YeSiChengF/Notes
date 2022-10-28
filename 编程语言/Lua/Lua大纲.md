@@ -365,6 +365,38 @@ end
 
 ## 多文件调用
 
+### require和import的区别
+
+#### require实现
+
+换个目录后就需要对路径进行变更
+
+个人理解：绝对路径
+
+```lua
+local MyClassBase = require("app.classes.MyClassBase")
+local MyClass = class("MyClass", MyClassBase)
+
+local Data1 = require("app.classes.data.Data1")
+local Data2 = require("app.classes.data.Data2")
+```
+
+#### import实现
+
+在模块名前添加多个"." ，这样 import() 会从更上层的目录开始查找模块。
+
+个人理解：相对路径
+
+```lua
+local MyClassBase = import(".MyClassBase")
+local MyClass = class("MyClass", MyClassBase)
+
+local Data1 = import(".data.Data1")
+local Data2 = import(".data.Data2")
+```
+
+
+
 ### require
 
 运行指定多文件
