@@ -241,5 +241,39 @@ public class SimpleRC : IRefCounter
 
 
 
-## ResMgr设计
+## AssetBundle
+
+### 打包AssetBundle
+
+```c#
+#if UNITY_EDITOR
+    [MenuItem("Tools/AseetBundle打包")]
+    static void MenuItem()
+    {
+        if (! Directory.Exists(Application.streamingAssetsPath))
+        {
+            Directory.CreateDirectory(Application.streamingAssetsPath);
+        }
+        BuildPipeline.BuildAssetBundles(Application.streamingAssetsPath,BuildAssetBundleOptions.None,BuildTarget.StandaloneWindows);
+    }
+#endif
+```
+
+### 加载AssetBundle
+
+```c#
+AssetBundle.LoadFromFile();
+```
+
+### 从AssetBundle中加载资源
+
+```c#
+AssetBundle.LoadAsset<T>(name);
+```
+
+### 卸载AssetBundle
+
+```c#
+AssetBundle.UnLoad(true);
+```
 
