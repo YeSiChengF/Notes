@@ -312,3 +312,17 @@ enum ResType
 说人话就是把公有行为抽象出来，不同角色进行不同实现。比如各种颜色的玩具鸭子，颜色只是公有属性，具体颜色才是具体角色所持有的。
 
 **缺点**就是增加了复杂度，在多层桥接模式下代码变得复杂很多。当需要多层桥接的时候需要考虑下是否好维护，可以改为组件组合的形式来降低复杂度。
+
+## 资源依赖
+
+### Manifest文件
+
+Manifest文件后缀名`.manifest`，Manifest记录AssetBundle内拥有哪些Asset，并且依赖于哪些其他的AssetBundle。
+
+`StreammingAssets.manifest`记录所有的AssetBundle的信息，包含AssetBundleInfos，每个info又包含AssetBundle名字和依赖的AssetBundle。
+
+Manifest文件可以进行读取，API：`AssetBundleManifest`
+
+- `GetAllAssetBundles()`获取所有AssetBundle的名字
+- `GetAllDependencies(bundleName)`获取目标AssetBundle的所有依赖AssetBundle名字(递归遍历)
+- `GetDirectDependencies(bundleName)`获取目标AssetBundle的直接依赖AssetBundle的名字(只遍历一层)
