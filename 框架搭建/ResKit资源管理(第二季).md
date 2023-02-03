@@ -317,6 +317,8 @@ enum ResType
 
 ### Manifest文件
 
+使用`BuildPiine.BuildAssetBundles`API执行AssetBundle构建管线时，Unity会序列化一个包含每个AssetBundle依赖项信息的对象。此数据存储在单独的AssetBundle中，其中包AssetBundleManifest类型的单个对象。
+
 Manifest文件后缀名`.manifest`，Manifest记录AssetBundle内拥有哪些Asset，并且依赖于哪些其他的AssetBundle。
 
 `StreammingAssets.manifest`记录所有的AssetBundle的信息，包含AssetBundleInfos，每个info又包含AssetBundle名字和依赖的AssetBundle。
@@ -326,3 +328,11 @@ Manifest文件可以进行读取，API：`AssetBundleManifest`
 - `GetAllAssetBundles()`获取所有AssetBundle的名字
 - `GetAllDependencies(bundleName)`获取目标AssetBundle的所有依赖AssetBundle名字(递归遍历)
 - `GetDirectDependencies(bundleName)`获取目标AssetBundle的直接依赖AssetBundle的名字(只遍历一层)
+
+### assetBundle依赖项
+
+**在Asset从AssetBundle中加载出来时，必须先加载Asset依赖的AssetBundle**
+
+AssetBundle之间的加载没有先后，但是Asset的加载有。
+
+比如A包里的 PrefabA 文件依赖B包里的 TextureB，PrefabA从包里加载前B包必须加载完毕。
