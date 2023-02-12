@@ -243,6 +243,13 @@ public class SimpleRC : IRefCounter
 
 ## AssetBundle
 
+AssetBundle使用流程
+
+1. `标记AssetBundle`主要是在Asset Labels上标记
+2. `Build AssetBundle`核心API：BuildPipeline.BuildAssetBundles()
+3. `加载AssetBundle` 核心API：AssetBundle.LoadFromFile()
+4. `从AssetBundle中加载资源` 核心API：AssetBundle.LoadAsset<T>()
+
 ### 打包AssetBundle
 
 ```c#
@@ -258,6 +265,78 @@ public class SimpleRC : IRefCounter
     }
 #endif
 ```
+
+#### 多平台Build
+
+Build AssetBundles支持对应平台
+
+建立一个与对应平台同名的文件夹，加载AssetBundle时也是通过路径拼接得到对应平台的资源。
+
+#### 从不同平台加载资源
+
+创建 获取资源路径拼接的工具
+
+```c#
+public class ResKitPathUtil
+    {
+        public static string FullPathForAssetBundles(string assetBundleName = "")
+        {
+            string platformName = GetPlatformName();
+            return Application.streamingAssetsPath + "/AssetBundles/" + platformName + "/" + assetBundleName;
+        }
+        public static string GetPlatformName()
+        {
+#if UNITY_EDITOR
+            return _GetPlatformName(EditorUserBuildSettings.activeBuildTarget);
+#else
+            return _GetPlatformName(Application.platform);
+#endif
+        }
+#if UNITY_EDITOR
+        private static string _GetPlatformName(BuildTarget buildTarget)
+        {
+            switch (buildTarget)
+            {
+                case BuildTarget.StandaloneWindows:
+                case BuildTarget.StandaloneWindows64:
+                    return "Windows";
+                case BuildTarget.Android:
+                    return "Android";
+                case BuildTarget.iOS:
+                    return "iOS";
+                case BuildTarget.StandaloneLinux64:
+                    return "Linux";
+                case BuildTarget.StandaloneOSX:
+                    return "OSX";
+                case BuildTarget.WebGL:
+                    return "WebGL";
+                default:
+                    return String.Empty;
+            }
+        }
+#endif
+        private static string _GetPlatformName(RuntimePlatform runtimePlatform)
+        {
+            switch (runtimePlatform)
+            {
+                case RuntimePlatform.Android:
+                    return "Android";
+                case RuntimePlatform.IPhonePlayer:
+                    return "iOS";
+                case RuntimePlatform.WindowsPlayer:
+                    return "Windows";
+                case RuntimePlatform.WebGLPlayer:
+                    return "WebGL";
+                case RuntimePlatform.OSXPlayer:
+                    return "OSX";
+                default:
+                    return String.Empty;
+            }
+        }
+    }
+```
+
+
 
 ### 加载AssetBundle
 
