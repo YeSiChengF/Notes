@@ -1,3 +1,0 @@
-课程git地址：https://github.com/BlueMonk1107/MeshProgram
-
-原文博客地址：https://catlikecoding.com/unity/tutorials/mesh-basics/
