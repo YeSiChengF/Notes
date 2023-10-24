@@ -1,5 +1,71 @@
 # Unity性能优化
 
+## 番外
+
+### AUP
+
+Async Upload Pipeline异步上传管线
+
+[优化加载性能：了解异步上传管线AUP (qq.com)](https://mp.weixin.qq.com/s?__biz=MzkyMTM5Mjg3NQ==&mid=2247535763&idx=1&sn=dda4a1f7fc62e0a23aeef3f48af9d9b8&source=41#wechat_redirect)
+
+#### 同步与异步
+
+在同步上传管线中，Unity必须在单个帧中同时加载纹理或网格的元数据、纹理的每个Texel或网格的每个顶点数据。而在异步上传管线中，Unity则在单个帧中**仅加载元数据**，并在后续帧中将二进制数据流式传输到GPU。
+
+##### 同步上传管线
+
+在项目构建时，Unity会将同步加载的网格或纹理的标头数据和二进制数据都写入**同一.res文件**（res即Resource）。在运行时，当程序同步加载纹理或网格时，Unity将该纹理或网格的标头数据和二进制数据从.res文件（磁盘中）加载到内存（RAM）中。当所有数据都位于内存中时，Unity随后将二进制数据上传到GPU（Draw Call前）。**加载和上传操作都发生在主线程上的单个帧中**。
+
+##### 异步上传管线
+
+在项目构建时，Unity会将标头数据写入到一个.res文件，而将二进制数据写入到另一个.resS文件（S应该指Streaming）。在运行时，当程序异步加载纹理或网格时，Unity将标头数据从.res文件（磁盘中）加载到内存（RAM）中。当标头数据位于内存中时，Unity随后使用**固定大小的环形缓冲区**（一块可配置大小的缓冲区）将二进制数据从.resS文件（磁盘中）流式传输到GPU。**Unity使用多个线程通过几帧流式传输二进制数据。**
+
+注意：使用AUP时，AB包必须是LZ4压缩。
+
+在构建过程中，纹理或网格对象会写入序列化文件，大型二进制数据的纹理或顶点数据会写入附带的.resS文件，这样的配置应用于玩家数据和资源包。
+
+AUP可以加载纹理和网格，但可读写纹理、可读写网格和压缩网格都不适用于AUP。
+
+AUP对每个指令会执行以下过程：
+
+1. 等待环形缓冲区中所需内存可用。
+2. 从源.resS文件中读取数据到分配的内存。
+3. 执行后期处理过程，例如：纹理解压、网格碰撞生成、每个平台的修复等。
+4. 以时间切片的方式在渲染线程进行上传。
+5. 释放环形缓冲区内存。
+
+#### 参数
+
+##### QualitySettings.asyncUploadTimeSlice
+
+设定渲染线程中每帧上传纹理和网格数据所用的时间总量，以毫秒为单位。
+
+当异步加载操作进行时，该系统会执行二个该参数大小的时间切片，该参数的默认值为2毫秒。
+
+如果该值太小，可能会在纹理/网格的GPU上传时遇到瓶颈。而该值太大的话，会造成帧率陡降。
+
+如果上传时间设定的太长，那么留给渲染的时间就会变少。
+
+##### QualitySettings.asyncUploadBufferSize
+
+该参数设定环形缓冲区的大小，以MB为单位。当上传时间切片在每帧发生时，要确保在环形缓冲区有足够的数据利用整个时间切片。
+
+如果环形缓冲区太小，上传时间切片会被缩短。
+
+##### QualitySettings.asyncUploadPersistentBuffer
+
+它决定在完成所有待定读取工作时，是否释放上传时使用的环形缓冲区。
+
+分配和释放该缓冲区经常会产生内存碎片，因此通常将其保留为默认值True。如果需要在未加载时回收内存，可以将该值设为False。
+
+#### 建议
+
+- 选择不会导致掉帧的最大QualitySettings.asyncUploadTimeSlice。
+- 在加载界面时，可以临时提高QualitySettings.asyncUploadTimeSlice。
+- 使用性能分析器来检查时间切片的利用率。时间切片在性能分析器中会显示为AsyncUploadManager.AsyncResourceUpload。如果时间切片没有完全利用的话，就提高QualitySettings.asyncUploadBufferSize。
+- 使用更大的QualitySettings.asyncUploadBufferSize会提高加载速度，所以如果内存足够的话，请将其从16MB提高至32MB。
+- 将QualitySettings.asyncUploadPersistentBuffer保留为true，除非有理由在未加载时减少运行时内存的使用。
+
 ## 第1节 静态资源优化
 
 在Unity中的资源都存放在asset内，分为了外部导入资源和内部创建资源，无论是哪种资源都涉及到导入问题。在不同平台上合理的资源导入设置能够带来更高的效率。 
@@ -15,6 +81,10 @@ Unity在UPR下也提供了asset检测工具`Asset Check`。
 一些双声道资源两个声道的声音一致，或移动设备下听不出区别则可以开启来减少内存。
 
 #### 压缩
+
+- PCM ：提供高品质但牺牲文件大小最适合使用在很短的音效上。
+- ADPCM： 这种格式适用于大量音效上如脚步爆破和武器，它比PCM小3.5倍但CPU使用率远低于Vorbis/MP3
+- Vorbis/MP3： 比PCM小但是品质比PCM低，比ADPCM消耗更多CPU。但大多数情况下我们还是应该使用这种格式，这个选择还多了个Quality可以调节质量改变文件大小 （Quality测试1和100对内存影响并不大）
 
 我们应该尽可能使用未压缩的`WAV格式文件`作为源文件。通过不同平台支持的压缩格式进行压缩。
 
@@ -36,12 +106,15 @@ Unity在UPR下也提供了asset检测工具`Asset Check`。
 
 不同的音乐类型推荐使用不同的加载类型。`Load Type`。
 
-- Decompress On Load
+- Decompress On Load   **加载时解压缩**
   - 音频压缩后大小小于200kb
-- Compressed In Memory
+  - 注：在加载时解压缩Vorbis编码的声音比使用它压缩大约多十倍的内存（对于ADPCM编码大约是3.5倍
+- Compressed In Memory   **:压缩在内存中**
   - 音频压缩后大小大于200kb
+  - 在播放时解压缩，解压缩在混音器线程上发生，并可在Profiler窗口的音频面板中的“DSP CPU”部分进行监视。
 - Streaming
   - 适合背景音，较长较大的音频。通过流加载，避免加载卡顿。
+  - 注：即使没有加载任何音频数据，流式片段也会有大约200KB的过载。
 
 ### Model
 
