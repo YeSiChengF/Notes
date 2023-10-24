@@ -36,7 +36,9 @@ AUP对每个指令会执行以下过程：
 
 #### 参数
 
-##### QualitySettings.asyncUploadTimeSlice
+##### 时间片
+
+QualitySettings.asyncUploadTimeSlice
 
 设定渲染线程中每帧上传纹理和网格数据所用的时间总量，以毫秒为单位。
 
@@ -46,11 +48,15 @@ AUP对每个指令会执行以下过程：
 
 如果上传时间设定的太长，那么留给渲染的时间就会变少。
 
-##### QualitySettings.asyncUploadBufferSize
+##### 缓冲区大小
+
+QualitySettings.asyncUploadBufferSize
 
 该参数设定环形缓冲区的大小，以MB为单位。当上传时间切片在每帧发生时，要确保在环形缓冲区有足够的数据利用整个时间切片。
 
 如果环形缓冲区太小，上传时间切片会被缩短。
+
+当纹理大小超过缓冲区大小时，会先消耗完缓冲区剩余大小，再重新分配至纹理所需大小，待上传完成后缓冲区再调整至设置大小。
 
 ##### QualitySettings.asyncUploadPersistentBuffer
 
