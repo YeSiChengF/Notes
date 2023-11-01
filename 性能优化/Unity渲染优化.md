@@ -113,7 +113,16 @@ void glDrawElementsInstancedBaseVertex(GLenum mode, GLsizei count, GLenum type, 
 
 SRP Batcher 通过批处理一系列 Bind 和 Draw GPU 命令来减少 DrawCall 之间的 GPU 设置的工作量。也就是之前一堆绑定和绘制的 GPU 命令，我们可以使用批处理减少绘制调用之间的 GPU 设置。
 
-**SRPBatcher** **的应用**
+##### 使用条件(兼容性)
+
+只能在高清渲染管线(HDRP) 和 通用渲染管线(URP)中使用
+
+###### Shader兼容性
+
+- shader必须在名为UnityPerDraw的常量缓冲区中声明所有的内置引擎 properties。 举例, unity_ObjectToWorld， 或者unity_SHAr。
+- shader必须在名为UnityPerMaterial的常量缓冲区中声明所有material properties。
+
+##### **SRPBatcher** **的应用**
 
 - 应用1：
 
