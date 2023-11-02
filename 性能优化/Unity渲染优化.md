@@ -90,6 +90,15 @@ void glDrawElementsInstancedBaseVertex(GLenum mode, GLsizei count, GLenum type, 
 
 有了这个 InstancingID 就能使得我们在多实例渲染中，辨识当前渲染的模型到底使用哪个属性参数。Shader的顶点着色器和片元着色器可以通过这个变量来获取模型矩阵、颜色等不同变化的参数。
 
+##### 使用限制
+
+当你使用GPU instancing时，受到下面的限制约束:
+
+- Unity自动为instancing调用选择MeshRenderer组件和`Graphics.DrawMesh`。注意不支持[SkinnedMeshRenderer](https://link.zhihu.com/?target=https%3A//docs.unity3d.com/ScriptReference/SkinnedMeshRenderer.html)。
+- 在一次GPU instancing draw call中，Unity仅对共享相同Mesh和相同Material的GameObjects进行batching处理。为了得到更好的instancing效果，尽量使用少量Meshes和Materials。至于如何增加“变化”(variations)，可以在你的shader代码中添加per-instance数据(更多细节，请继续往下看)。
+
+你也可以在c#脚本中调用[Graphics.DrawMeshInstanced](https://docs.unity3d.com/ScriptReference/Graphics.DrawMeshInstanced.html)和[Graphics.DrawMeshInstancedIndirect](https://docs.unity3d.com/ScriptReference/Graphics.DrawMeshInstancedIndirect.html)来完成GPU instancing。
+
 ##### 无法参与加速的情况
 
 1. 缩放为负值的情况下，会不参与加速。
