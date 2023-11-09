@@ -1,5 +1,12 @@
 # SpriteRenderer优化
 
+## 优化步骤
+
+1. 设置一个统一的网格，使用MeshRenderer替换SpriteRenderer
+2. 将小图打成图集，记录padding和uv(在图集中的位置)
+3. 使用DrawMeshInstancedIndirect渲染Mesh，传入缩放值和偏移值
+4. 在顶点着色器中进行缩放、偏移、uv值的设置
+
 - [ ] SpriteRender 替换成MeshRender
   - [ ] 静态图片 工具统一生成mesh
   - [ ] 可能还需要一个mesh 的管理器
@@ -37,9 +44,10 @@ Draw Mode
 
 一般和`Mesh Fiter`搭配，`Mesh Fiter`负责展示具体的`Mesh`。`MeshRenderer`负责决定怎么渲染这个`Mesh`。
 
-相比于`SpriteRenderer`基本上顶点数量更多，因为必须持有一个mesh。但是在片元着色时相比于`SpriteRenderer`消耗更小，因为减少了Overdraw的行程，`MeshRender`使用的`Mesh`可以更贴合uv的大小，从而避免过多半透像素的渲染。
+相比于`SpriteRenderer`需要多持有一个mesh。但是在片元着色时相比于`SpriteRenderer`消耗更小，因为减少了Overdraw的行程，`MeshRender`使用的`Mesh`可以更贴合uv的大小，从而避免过多半透像素的渲染。
 
 ### 优化
 
 在播放大量帧动画时，一些地方也可以使用MeshRenderer，使用相同的`Mesh`设置帧动画uv。比如播放一堆士兵进行战斗的画面时，每个soldier动画组件都是同一个`mesh`，播放的帧动画打包在同一个图集中，保证动画材质的相同，可以使用`GPU Instancing`来进行渲染上的优化。
 
+## 测试结果
