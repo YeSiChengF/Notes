@@ -54,11 +54,21 @@ Draw Mode
 
 ##### TextureImportSetting
 
+###### MeshType
+
 Sprite图集  MeshType需要为FullRect，这样使用可以使用通用的平面网格，不需要变更uv坐标，缺点就是透明图会增加OverrDraw
 
 如果大量静态图，那么可以把MeshType设置为Tight，然后再用工具导出Sprite图的网格，这样应该是最友好的方式。
 
 如果是动态图类似于帧动画这种，还是FullRect使用平面网格进行设置最为方便。因为如果通过工具来匹配所有图集内精灵图都适用的网格，再设置uv坐标再把数据记录起来，还需要对数据进行一个统一的管理反而麻烦许多。
+
+###### Pixels Per Unit
+
+一个unity单位将显示多少个像素该问题。
+
+比如设置为100，那么128 x 128的纹理 / 100 那么就需要1.28个unity单位才能显示完。
+
+当需要计算出Sprite的Mesh数据时，需要除以 Pixels Per Unit才能得到Unity单位。Mesh都是Unity单位。
 
 ### 网格优化
 
