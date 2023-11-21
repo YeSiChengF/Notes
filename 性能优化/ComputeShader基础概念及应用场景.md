@@ -35,7 +35,7 @@
 
 ### c#部分
 
-以往的`Vertex shader`和` Fragment shade`r我们都是给它关联到`Material`上来使用的，但是CS不一样，它是**由c#来驱动**的。
+以往的`Vertex shader`和` Fragment shader`我们都是给它关联到`Material`上来使用的，但是CS不一样，它是**由c#来驱动**的。
 
 ### ComputeBuffer
 
