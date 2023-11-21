@@ -94,3 +94,15 @@ mesh.SetVertexBufferParams(vts.Length,layout);
 ```
 
 ## 测试结果
+
+### SpriteRenderer和MeshRenderer对比
+
+在渲染600个帧动画的情况下，两者几乎没什么差异，相反MeshRenderer由于需要计算 顶点、uv的偏移和缩放。访问到了`sprite.uv`导致多开辟了空间。
+
+![image-20231121150153728](SpriteRender优化.assets/image-20231121150153728.png)
+
+这点也很好优化，把这些计算在生成帧动画图集阶段就可以一起导出到本地。避免运行时访问uv数据。
+
+DrawCall数量上，MeshRenderer会比SpriteRenderer多上一个，无法合批原因为超过实例化多大数（511个）
+
+![image-20231121153111740](SpriteRender优化.assets/image-20231121153111740.png)
