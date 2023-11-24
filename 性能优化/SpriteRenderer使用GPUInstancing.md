@@ -1,4 +1,4 @@
-# SpriteRenderer优化
+# SpriteRenderer使用GPUInstancing
 
 [相关demo](https://github.com/ysich/UnityMeshGPUInstancing.git)
 
@@ -59,7 +59,7 @@ Draw Mode
 
 这里需要特别注意的是SpriteRenderer中生成的Mesh和Unity内建的Quad的Mesh虽然都是两个三角形，但是顶点和索引的顺序确实完全不同的。
 
-![img](SpriteRenderer优化.assets/UnitySpriteGPUInstancing.png)
+![img](SpriteRenderer使用GPUInstancing.assets/UnitySpriteGPUInstancing.png)
 
 ### 网格优化
 
@@ -90,7 +90,7 @@ mesh.SetVertexBufferParams(vts.Length,layout);
 
 ### SpriteRenderer
 
-![image-20231124100651173](SpriteRenderer优化.assets/image-20231124100651173.png)
+![image-20231124100651173](SpriteRenderer使用GPUInstancing.assets/image-20231124100651173.png)
 
 SpriteRenderer主要的开销在于cpp层的`set_sprite`1.71ms，由于能够使用动态合批，满足条件go可以通过一个drawCall进行渲染。
 
@@ -98,7 +98,7 @@ SpriteRenderer主要的开销在于cpp层的`set_sprite`1.71ms，由于能够使
 
 ### MeshRenderer
 
-![image-20231124101729121](SpriteRenderer优化.assets/image-20231124101729121.png)
+![image-20231124101729121](SpriteRenderer使用GPUInstancing.assets/image-20231124101729121.png)
 
 在MeshRenderer中主要耗时在于`MaterialPropertyBlock.SetVector`和`Renderer.SetPropertyBlock`中，其他耗时则可以通过其他方式进行规避，所以可以看出主要都是对渲染参数的传递耗时。
 
@@ -108,7 +108,7 @@ SpriteRenderer主要的开销在于cpp层的`set_sprite`1.71ms，由于能够使
 
 ### Graphics.DrawMeshInstancedIndirect
 
-![image-20231124103620666](SpriteRenderer优化.assets/image-20231124103620666.png)
+![image-20231124103620666](SpriteRenderer使用GPUInstancing.assets/image-20231124103620666.png)
 
 使用`DrawMeshInstancedIndirect`进行渲染，在耗时表现上比前面两者优秀很多。但是这里会有个隐藏开销，这里都是渲染同一张图片所以获取Sprite数据的时候只获取了一次，和前面两个获取2000次的结果有偏差。
 
@@ -118,10 +118,10 @@ SpriteRenderer主要的开销在于cpp层的`set_sprite`1.71ms，由于能够使
 
 在渲染600个帧动画的情况下，两者几乎没什么差异，相反MeshRenderer由于需要计算 顶点、uv的偏移和缩放。访问到了`sprite.uv`导致多开辟了空间。
 
-![image-20231121150153728](SpriteRenderer优化.assets/image-20231121150153728.png)
+![image-20231121150153728](SpriteRenderer使用GPUInstancing.assets/image-20231121150153728.png)
 
 这点也很好优化，把这些计算在生成帧动画图集阶段就可以一起导出到本地。避免运行时访问uv数据。
 
 DrawCall数量上，MeshRenderer会比SpriteRenderer多上一个，无法合批原因为超过实例化多大数（511个）
 
-![image-20231121153111740](SpriteRenderer优化.assets/image-20231121153111740.png)
+![image-20231121153111740](SpriteRenderer使用GPUInstancing.assets/image-20231121153111740.png)
