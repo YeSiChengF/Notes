@@ -1,4 +1,4 @@
-# Unity内存管理
+# Unity内存分布及分析
 
 ## 内存分类
 
@@ -66,9 +66,9 @@ PlayerSettings.SetManagedStrippingLevel(buildTargetGroup, ManagedStrippingLevel.
 
 注意有些类似反射的调用方式，在静态检测中检测为未使用，在裁剪等级高时会被裁剪掉。需要使用 [Preserve] 属性和 link.xml 文件进行标识，避免被裁剪。
 
-![image-20231124164952826](Unity内存管理.assets/image-20231124164952826.png)
+![image-20231124164952826](Unity内存分布及分析.assets/image-20231124164952826.png)
 
-![image-20231124164956714](Unity内存管理.assets/image-20231124164956714.png)
+![image-20231124164956714](Unity内存分布及分析.assets/image-20231124164956714.png)
 
 ##### AssetBundle
 
@@ -111,7 +111,7 @@ Mono堆申请的物理内存是连续的，并且Mono堆在向操作系统申请
 
 ## 各平台下的内存类型
 
-### IOS下的内存类型
+### IOS下的内存
 
 和Unity只关注虚拟内存不一样，OS需要关注物理内存 Physical Memory (RAM)。尤其是移动平台，更是要将有限的内存使用到极致才可以。所以不少PC平台使用的内存策略移动平台并不能用，比如交换空间（IOS只能对Clean类型的内存做Paging ）
 
@@ -151,4 +151,111 @@ iOS中的内存警告，只会释放clean memory。因为iOS认为dirty memory�
 
 OS系统使用所谓的统一架构，即GPU和CPU共享某一部分内存，比如纹理和网格数据，这些是由驱动器进行分配的。另外还有一些是GPU的驱动层以及GPU独享的内存类型（Video memory ）。
 
-![v2-2a267fccb5c6ff540cf099420f49a0c6_720w](Unity内存管理.assets/v2-2a267fccb5c6ff540cf099420f49a0c6_720w.png)
+![v2-2a267fccb5c6ff540cf099420f49a0c6_720w](Unity内存分布及分析.assets/v2-2a267fccb5c6ff540cf099420f49a0c6_720w.png)
+
+#### Compressed Memory
+
+iOS设备没有swapped memory，而是采用Compressed Memory机制，一般情况下能将目标内存压缩至原有的一半以下。
+
+压缩内存机制，使得内存警告与释放内存变得稍微复杂一些。即，对于已经被压缩过的内存，如果尝试释放其中一部分，则会先将它解压。而解压过程带来的内存增大，可能得到我们并不期待的结果。
+
+从经验来看，OS会比较积极的来做压缩以减少脏内存的总量。
+
+我们平常开发所关心的内存占用其实是 ***Dirty Size和Compressed Size两部分***，也应尽量优化这两部分。而Clean Memory一般不用太多关注。
+
+#### FootPrint
+
+Footprint是苹果推荐的内存度量及优化的指标。当Memory Footprint的值达到Limit line时，就会触发内存警告，并进一步导致OOM。
+
+Footprint主要是由Dirty和Compressed组成。或者说Resident 是由Footprint和Clean组成的。Footprint没有统一标准，它会因为设备、操作系统、甚至是当前运行环境不同而不同。
+
+#### 查看内存的几种方式
+
+##### Xcode Memory Gauge
+
+绿色表示内存良好，黄色是危险区域，如果不及时处理马上就会被OS杀掉。从测试的结果上来说，它总是比用VM Tracker工具测出的Dirty Memory + Compressed Memory 要大10-15M。
+
+但实际上，这个数值并不是OS杀掉APP的唯一判断标准。一般在杀掉一个APP的时候会经过以下的步骤：
+
+- 尝试移除Clean 内存页。
+- 如果某个APP占用了太多的Dirty内存，OS发送一个内存警告过去，让它释放资源。
+- 几次警告之后，如果Dirty内存仍然占用很高的话就会被Kill掉。
+
+由于IOS杀APP的策略也是不透明的，所以如果要防止APP被系统终结，唯一的办法就是尽量降低Dirty内存。
+
+##### VM Tracker
+
+VM Tracker是XCode Instruments工具组里的一个。它提供比较详细的虚拟内存的分布情况，也是为一个提供Dirty Memory信息的工具。但遗憾的是它没有展示内存分配的目的和时间。
+
+![img](Unity内存分布及分析.assets/v2-2759a18f2a4a43104c7f09c1890f2431_r.jpg)
+
+###### 表头类型：
+
+- **Type** — 内存类型
+- **Resident Size** — Resident Memory 内存
+- **Dirty Size** — Dirty Memory 内存
+- **Swapped Size** — Compressed Swapped Memory 内存
+- **Virtual Size** — Virtual Memory 内存
+- **Res. %** — Resident Memory 和Virtual Memory的占比。
+- 接下来就是一些实际的类型在各个层面的具体数值了。就不一一介绍类型了，挑几个重点解释一下。
+- ***All\*** — 所有的分配。
+- ***Dirty\*** — Dirty Memory。
+- **IOKit** — graphics driver memory,比如：render targets, textures, meshes, compiled shaders等
+- **VM_ALLOCATE** — 主要是Mono Heap. 如果此项值过大，可以用Unity Profiler 来查看具体分配。
+- **MALLOC_\*** — 主要是Unity native 或者是third-party plugins分配的内存。
+- **__TEXT** — 只读的可执行代码段 和静态数据。
+- **__DATA** — 可写的可执行 code/data。
+- **__LINKEDIT** — 各种链接库的实际元数据, 比如 符号, string, 重分配的表格等.
+
+### Android下的内存
+
+IOS操作系统是基于Unix的，Android操作系统是基于Linux的，而Linux又是基于Unix的，所以安卓系统在内核上和IOS非常相似。
+
+#### 内存分类
+
+安卓将内存分为三个类型：
+
+- RAM —— 也就是我们常说的内存，但其大小通常有限。高端设备通常具有较大的 RAM 容量。
+- zRAM —— 是用于交换空间的 RAM 分区。当内存不足的时候，OS会将RAM中一部分数据进行压缩，然后存至zRAM。设备制造商可以设置 zRAM 大小上限。
+- Storage —— 通常说的存储器。平时的APP，照片，缓存文件啥的都在这里。
+
+![v2-13df64cc7f686d8dabc7e1f307b4128d_r](Unity内存分布及分析.assets/v2-13df64cc7f686d8dabc7e1f307b4128d_r.png)
+
+#### Footprint
+
+与IOS的Footprint不同的是，安卓的内存是另外一种叫法
+
+- **VSS-** Virtual Set Size 虚拟耗用内存（包含共享库占用的内存）
+- **RSS-** Resident Set Size 实际使用物理内存（包含共享库占用的内存）
+- **PSS**- Proportional Set Size 实际使用的物理内存（比例分配共享库占用的内存）
+- **USS-** Unique Set Size 进程独自占用的物理内存（不包含共享库占用的内存）
+
+一般来说内存占用大小有如下规律：VSS >= RSS >= PSS >= USS
+
+目前Unity的游戏在安卓上的指标默认都在使用PSS。
+
+#### 安卓平台的测试方式
+
+##### **逐个击破**
+
+从Unity的视角出发。既然Unity无法统计三方插件的消耗，那我们就用“差异法”来逐个击破每个用到的三方插件。
+
+比如我们基于一个mini工程，首先测量出该mini工程当前各内存指标值。然后接入三方插件，使用用例再次测试相同指标。得出的差异值就约等于该插件的内存消耗。
+
+当我们将所有的插件的指标都按照该方式测量之后，再加上Unity自身的Reserved内存就可以看做是当前的内存分布情况。
+
+该方法自然有其弊端：
+
+差异值会受到不同设备当前环境的共享库影响，可能造成Plugin在在不同机器差异较大。
+
+方法并非白盒，无法确定实际会受到哪些客观条件或者内部逻辑的影响。
+
+由于移动平台的脏内存策略，实际上只能测量出虚拟内存的差异值。详情看如下测试结论：不同内存分配方式对实际内存的影响
+
+很难做到控制变量。所以需要针对插件写覆盖面足够全的测试用例。
+
+##### **海底捞月**
+
+另外一招就是海底捞月。从最底层的Malloc出发，写Hook函数监听内存申请，最后汇总分析。比如这篇文章：mallochook内存分配回调（glibc-3-内存）。[https://www.jianshu.com/p/2beb412bd97b](https://link.zhihu.com/?target=https%3A//www.jianshu.com/p/2beb412bd97b)
+
+这实际上和移动平台的内存工具模式相同。只不过用自定义的方式我们可以更加定制化工具的显示规则。虽然方案可行，但它存在和移动平台工具相同的问题，统计出的堆栈应该如何进行归类。怎么判定哪个函数归属于引擎，哪个归属于三方插件，以及系统共享库或者Framework呢？
