@@ -146,6 +146,22 @@ Mip Level 计算公式：
 
 ## 常用API
 
+### QualitySetting
+
+- QualitySettings.streamingMipmapsActive
+- QualitySettings.streamingMipmapsAddAllCameras 
+- QualitySettings.streamingMipmapsMemoryBudget
+- QualitySettings.streamingMipmapsMaxLevelReduction
+- QualitySettings.masterTextureLimit
+
+### Texture
+
+- Texture.streamingTextureDiscardUnusedMip
+  - 会序列化到本地
+- Texture.currentTextureMemory
+- Texture.SetStreamingTextureMaterialDebugProperties(); —— 在Shader中会给每个开启Mipmap的纹理赋值一个MipInfo
+- Texutre.mipMapBias —— 设置单个纹理偏移值
+
 ## 总结
 
 - 把Mipmap等级看做是一个纹理采样的区间范围，`当前Mip等级`~`Max Level Reduction`，GPU会根据DDX和DDY在这个区间内选择一个合适的mipmap进行采样的。
