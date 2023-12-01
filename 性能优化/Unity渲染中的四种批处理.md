@@ -134,8 +134,6 @@ constant Buffer 为64KB = 65536 byte
 
 ![img](Unity渲染中的四种批处理.assets/v2-0dde54b930bef9c768c10d3c79126e16_r.jpg)
 
-###### 
-
 #### SRP Batcher
 
 `SRP Batcher` 并不会减少 DrawCall，减少是 DrawCall 之间的 GPU 设置的工作量。

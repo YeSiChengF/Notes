@@ -114,6 +114,8 @@ SpriteRenderer主要的开销在于cpp层的`set_sprite`1.71ms，由于能够使
 
 在实际项目中则是会一直收集变化信息(position、scale等等)，然后在下一帧进行渲染。在每次Update都进行一次`数据设置`和`传递数据给GPU`，会给每一帧施加不少的压力。
 
+#TODO:实际上这里需要用`DrawMeshInstancedProcedural`接口来渲染会一直改变的mesh，`DrawMeshInstancedIndirect`接口则是用来渲染一个`ComputeShader`就能渲染完的mesh
+
 ### SpriteRenderer和MeshRenderer对比
 
 在渲染600个帧动画的情况下，两者几乎没什么差异，相反MeshRenderer由于需要计算 顶点、uv的偏移和缩放。访问到了`sprite.uv`导致多开辟了空间。

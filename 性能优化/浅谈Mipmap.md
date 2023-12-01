@@ -108,9 +108,9 @@ Mip Level 计算公式：
 
 1. 当Non Streamed Texture（未开启Mipmap Streaming的Texture）需要被加载时，其会被完全加载到内存中，如果加载的Texture具有Mipmap 0 ~ n，则Mipmap 0 ~ n都会被加载到内存中。
 2. 在加载Scene时，如果Budget足够，Scene中的GO所使用的Texture会完全加载，即加载Mipmap 0 ~ n级；如果Budget不足，则按Max Level Reduction加载。
-3. 动态加载的GO Texture在Load和Instantiate时（在此时可能并未实际渲染该物体），Unity会始终首先加载其Max Level Reduction级的Mipmap到内存中，这样做的好处是加载速度会变快，因为只需要加载一个Mipmap等级，占用的内存会少，另外Texture Streaming System会为其使用纹理异步加载。
+3. **动态加载的GO Texture在Load和Instantiate时**（在此时可能并未实际渲染该物体），**Unity会始终首先加载其Max Level Reduction级的Mipmap到内存中，这样做的好处是加载速度会变快，因为只需要加载一个Mipmap等级，占用的内存会少**，另外Texture Streaming System会为其使用纹理异步加载。
 4. 在我们实际需要渲染GO时（当Instantiate GO后，我们可能需要立刻渲染该物体，或者该物体Active后出现在摄像机内等等情况），CPU会按照当前空闲的纹理串流预算和摄像机和物体之间的距离等等因素去计算当前需要加载的Mipmap等级。如果Budget足够，则加载计算出的Mipmap等级；如果Budget不足，则依然加载Max Level Reduction级别的Mipmap。
-5. 在运行时，当我们需要加载一个新的Texture且当前纹理占用内存超过了预算，Texture Streaming System会想办法开始减少Texture占用的内存。对于Scene自带的所有GO，Unity会以距离摄像机从远到近的顺序重新计算来判断其是否真正需要加载当前其Mipmap等级，如果不需要则会卸载其过高的Mipmap等级，以此给出内存空间给到新加载的Texture。此时，对于需要加载的新Texture，如果其计算出的Mipmap等级可以加载（即空闲内存足够）则加载其计算出来的Mipmap等级；如果不能加载（在按策略卸载部分GO不需要的Mipmap后，内存还是不够），则加载Max Level Reduction级别的Mipmap。从这一点也可以看出，对于一个Texture，其实际加载的最大Mipmap等级就是Max Level Reduction（即使会超出Budget也会加载这一等级）。
+5. 在运行时，当我们需要加载一个新的Texture且当前纹理占用内存超过了预算，Texture Streaming System会想办法开始减少Texture占用的内存。**对于Scene自带的所有GO，Unity会以距离摄像机从远到近的顺序重新计算来判断其是否真正需要加载当前其Mipmap等级，如果不需要则会卸载其过高的Mipmap等级，以此给出内存空间给到新加载的Texture。**此时，对于需要加载的新Texture，如果其计算出的Mipmap等级可以加载（即空闲内存足够）则加载其计算出来的Mipmap等级；如果不能加载（在按策略卸载部分GO不需要的Mipmap后，内存还是不够），则加载Max Level Reduction级别的Mipmap。从这一点也可以看出，对于一个Texture，其实际加载的最大Mipmap等级就是Max Level Reduction（即使会超出Budget也会加载这一等级）。
 
 ### Mipmap偏移 MipmapBias
 
@@ -161,6 +161,15 @@ Mip Level 计算公式：
 - Texture.currentTextureMemory
 - Texture.SetStreamingTextureMaterialDebugProperties(); —— 在Shader中会给每个开启Mipmap的纹理赋值一个MipInfo
 - Texutre.mipMapBias —— 设置单个纹理偏移值
+
+## 几个关键点
+
+此外，UWA课堂中也提到了几个使用Texture Streaming System的关键点，也算是他们踩过的坑。
+
+1. 移动端一定要通过代码设置QualitySettings.streamingMipmapsActive = true。如果只是在Quality Settings中手动勾选，则Editor下会起作用，但移动端可能会出现不起作用的情况。
+2. Unity版本升级后，可能会使纹理变糊。解决方法：开一个新项目，把所有Mesh、Texture原封不动拷贝过去。
+3. 不要相信Editor Profiler，**直接在真机上测试**。这一点非常重要，在Editor下的纹理占用内存量会比真机大得多（可能是使用的资源路径不同？），同一情况下，在Editor下纹理占用可能到达300MB，但在真机上可能只有30M。因此一切Texture Streaming相关的测试一定要放在真机上进行！
+4. 在不激活Texture.streamingTextureDiscardUnusedMips的情况下，Mip被丢弃的时机（指已加载的Mip从显存中卸载）应该只有一个，即当前纹理串流预算不足，且需要加载新的Mip Streaming Texture，此时从远到近查找不需要使用的Mip卸载。这也就意味着直接拉远镜头并不会立即触发Mip等级的降低，因为之前我以为拉远了镜头就应该使用模糊的Mip了，这一点比较重要，一开始以为是Bug。
 
 ## 总结
 
