@@ -2,7 +2,7 @@
 
 资源大小
 
-![image-20231010102052383](C:\Users\onemt\AppData\Roaming\Typora\typora-user-images\image-20231010102052383.png)
+![image-20231010102052383](Lua配置方式不同的对比.assets\image-20231010102052383.png)
 
 RunTime运行时内存大小
 

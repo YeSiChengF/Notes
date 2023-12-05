@@ -154,6 +154,13 @@ void Update() {
 }
 ```
 
+### 小节总结
+
+- 一个CS中至少要有一个kernel才能被唤醒 ，类似于main函数
+- numthreads值设为64的倍数，这样能保证在调用时性能最优
+- 在ComputeShader中因为是多线程操作，如果需要对数据进行写入需要使用UAV数据类型
+- 使用Shader.PropertyToID缓存参数id，避免频繁访问name造成的gc
+
 ## 视锥体剔除
 
 View Frustum Culling
