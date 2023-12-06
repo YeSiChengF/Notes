@@ -125,6 +125,8 @@ IOS设备上的物理芯片内存。物理内存的实际用量要扣除操作�
 
 对于开发者而言是read-only，只能由IOS系统进行写入和移除。
 
+由Unity分配的Reserved - Used = Clean Memory的空间
+
 - System frameworks的常量部分、应用程序的二进制文件
 - 可以被释放（Page Out，iOS上是压缩内存的方式）的文件，包括内存映射文件Memory mapped file（如image、data、model等）。内存映射文件通常是只读的。
 - 系统中可回收、可复用的内存，实际不会立即申请到物理内存，而是真正需要的时候再给。
@@ -134,6 +136,8 @@ IOS设备上的物理芯片内存。物理内存的实际用量要扣除操作�
 ##### Dirty Memory
 
 主要强调不可被重复使用的内存。
+
+只要Unity中Reserved中的空间写入了数据就变成了Dirty Memory
 
 - 被写入数据的内存，包括所有heap中的对象、图像解码缓冲(ImageIO, CGRasterData，IOSurface)。
 - 已使用的实际物理内存，系统无法自动回收。
@@ -202,6 +206,14 @@ VM Tracker是XCode Instruments工具组里的一个。它提供比较详细的�
 - **__TEXT** — 只读的可执行代码段 和静态数据。
 - **__DATA** — 可写的可执行 code/data。
 - **__LINKEDIT** — 各种链接库的实际元数据, 比如 符号, string, 重分配的表格等.
+
+#### 在Unity中可优化的部分
+
+- IOKit—优化纹理资源和一些buffer
+
+- VM_ALLOCATE 
+
+  
 
 ### Android下的内存
 
