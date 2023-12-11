@@ -88,6 +88,8 @@ Reserved Total 和 Used Total为Unity引擎在内存方面的总体分配量和�
 
 对于绝大多数平台而言，Reserve Total内存 = Reserved Unity内存 + GFX内存 + FMOD内存 + Mono内存。
 
+在移动平台中一般最多使用物理内存中的50%
+
 ### 频繁分配和释放导致应用闪退
 
 内存分页（IOS上大部分为16K/page）是内存管理的最小单位，当Unity需要申请内存的时候，都会以block的方式（若干个页）进行申请。**如果某一页在若干次GC（IOS为8次）之后仍然为Empty的话，它就会被释放，实际的物理内存就会被还给物理内存。**
@@ -137,7 +139,7 @@ IOS设备上的物理芯片内存。物理内存的实际用量要扣除操作�
 
 主要强调不可被重复使用的内存。
 
-只要Unity中Reserved中的空间写入了数据就变成了Dirty Memory
+只要Unity中Reserved中的空间写入了数据就变成了Dirty Memory，一般我们需要优化的也就是Dirty Memory。
 
 - 被写入数据的内存，包括所有heap中的对象、图像解码缓冲(ImageIO, CGRasterData，IOSurface)。
 - 已使用的实际物理内存，系统无法自动回收。
@@ -149,7 +151,9 @@ iOS中的内存警告，只会释放clean memory。因为iOS认为dirty memory�
 
 #### GPU Driver Memory
 
-OS系统使用所谓的统一架构，即GPU和CPU共享某一部分内存，比如纹理和网格数据，这些是由驱动器进行分配的。另外还有一些是GPU的驱动层以及GPU独享的内存类型（Video memory ）。
+IOS系统使用所谓统一架构，GPU和CPU共享某一部分内存，比如纹理和网格数据，这些是由驱动器进行分配的。另外还有一些是GPU的驱动层以及GPU独享的内存类型（Video memory ）。
+
+本质上就是IOS的显存
 
 ![v2-2a267fccb5c6ff540cf099420f49a0c6_720w](Unity内存分布及分析.assets/v2-2a267fccb5c6ff540cf099420f49a0c6_720w.png)
 
