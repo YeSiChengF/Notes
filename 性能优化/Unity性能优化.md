@@ -81,7 +81,7 @@ DSP Buffer大小的设置一般会导致两种问题：
 - 建议导出时不携带摄像机、灯光、材质等场景信息
   - 因为和unity的设置都不同，造成冗余
 
-![2.png](https://github.com/lwwhb/Unity2022_SUNTAIL_Stylized_Fantasy_Village_Optimization/blob/main/Documents/Pics/2.png?raw=true)
+![2.png](E:\Notes\性能优化\Unity性能优化.assets\Model优化流程.png)
 
 #### 原始模型影响性能点
 
